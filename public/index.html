@@ -24,7 +24,9 @@
 <body>
 <header class="nav">
   <a class="brand" href="/">Notes</a>
-  <nav></nav>
+  <nav>
+    <a href="/feed.xml">RSS</a>
+  </nav>
 </header>
 
 <main>
@@ -33,15 +35,27 @@
     <p class="muted">Thinking-in-public from a small team.</p>
   </section>
 
+  <div class="search-wrap">
+    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input id="search" type="search" placeholder="Search posts, tags, authors…" autocomplete="off" aria-label="Search posts" />
+    <button id="search-clear" class="search-clear" type="button" aria-label="Clear search" hidden>×</button>
+  </div>
+
   <section class="filter-bar" id="filter-bar">
     <button class="cat active" data-cat="">All</button>
   </section>
+
+  <div class="tag-cloud" id="tag-cloud" aria-label="Tags"></div>
+
+  <section id="featured"></section>
+
+  <div class="result-info muted" id="result-info" hidden></div>
 
   <section class="post-list" id="post-list"></section>
 </main>
 
 <footer>
-  <span>Notes. A blog scaffold to fork and make your own.</span>
+  <span>Notes. A blog scaffold to fork and make your own. · <a href="/feed.xml">RSS</a></span>
 </footer>
 
 <script src="/app.js"></script>
