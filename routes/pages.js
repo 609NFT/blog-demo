@@ -120,6 +120,10 @@ router.get('/post/:slug', (req, res) => {
 <div class="read-progress" id="read-progress" aria-hidden="true"></div>
 <header class="nav">
   <a class="brand" href="/">Notes</a>
+  <form class="nav-search" action="/" role="search">
+    <svg class="search-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input name="q" type="search" placeholder="Search posts…" autocomplete="off" aria-label="Search posts" />
+  </form>
   <nav>
     <a href="/">Home</a>
     <a href="/feed.xml">RSS</a>

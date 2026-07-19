@@ -119,6 +119,12 @@ const blog = (() => {
       else byTag(btn.dataset.tag);
     });
 
+    // On the home page the header search live-filters, so don't let Enter submit
+    // the form and reload. (On other pages there's no handler, so the form does a
+    // native GET to /?q=… and this page runs the search from the deep link.)
+    const searchForm = searchInput.closest('form');
+    if (searchForm) searchForm.addEventListener('submit', (e) => e.preventDefault());
+
     let timer;
     searchInput.addEventListener('input', (e) => {
       const q = e.target.value;
