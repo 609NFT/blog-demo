@@ -127,6 +127,7 @@ router.get('/post/:slug', (req, res) => {
   <nav>
     <a href="/">Home</a>
     <a href="/feed.xml">RSS</a>
+    <a href="/admin">Admin</a>
   </nav>
 </header>
 
