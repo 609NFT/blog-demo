@@ -1,43 +1,46 @@
 const express = require('express');
-const crypto = require('crypto');
 const path = require('path');
 const posts = require('../lib/posts');
+const auth = require('../lib/admin-config');
 const { render } = require('../lib/markdown');
 
 const router = express.Router();
 
-// Constant-time password check. Hashing both sides to a fixed length first lets
-// timingSafeEqual run over equal-length buffers and hides length too.
-function passwordMatches(candidate, expected) {
-  const a = crypto.createHash('sha256').update(String(candidate)).digest();
-  const b = crypto.createHash('sha256').update(String(expected)).digest();
-  return crypto.timingSafeEqual(a, b);
-}
-
-// Gate the admin API on ADMIN_PASSWORD (set it via VibeKit /env). Until it's set,
-// the whole admin surface is disabled — no default password ever ships. The UI
-// sends `Authorization: Basic base64("admin:<password>")` on every call; we use
-// fetch so no native browser prompt appears.
+// Gate every admin API call. Password comes from the owner's first-run setup
+// (stored on the app) or an ADMIN_PASSWORD env var if they'd rather pin it.
+// The UI sends `Authorization: Basic base64("admin:<password>")` via fetch, so
+// no native browser prompt appears. 409 = not set up yet (client shows setup).
 function requirePassword(req, res, next) {
-  const expected = process.env.ADMIN_PASSWORD;
-  if (!expected) {
-    return res.status(503).json({ error: 'admin_disabled', message: 'Set ADMIN_PASSWORD in your env vars to enable the admin.' });
-  }
-  const auth = req.headers.authorization || '';
-  const m = auth.match(/^Basic\s+(.+)$/i);
+  if (!auth.isConfigured()) return res.status(409).json({ error: 'not_configured' });
+  const header = req.headers.authorization || '';
+  const m = header.match(/^Basic\s+(.+)$/i);
   if (!m) return res.status(401).json({ error: 'unauthorized' });
   const decoded = Buffer.from(m[1], 'base64').toString('utf8');
   const password = decoded.slice(decoded.indexOf(':') + 1);
-  if (!password || !passwordMatches(password, expected)) {
-    return res.status(401).json({ error: 'unauthorized' });
-  }
+  if (!auth.verify(password)) return res.status(401).json({ error: 'unauthorized' });
   next();
 }
 
-// Admin shell (login + editor UI). Not itself sensitive — it holds no data and
-// every API call it makes is gated by requirePassword.
+// Admin shell (setup + login + editor UI). Not itself sensitive — it holds no
+// data and every API call it makes is gated by requirePassword.
 router.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'));
+});
+
+// Unprotected: tells the client whether to show first-run setup or login.
+router.get('/api/admin/status', (req, res) => {
+  res.json({ configured: auth.isConfigured(), envManaged: auth.envManaged() });
+});
+
+// First-run: claim the admin by creating a password. Only works while unset.
+router.post('/api/admin/setup', (req, res) => {
+  try {
+    auth.setup((req.body && req.body.password) || '');
+    res.status(201).json({ ok: true });
+  } catch (e) {
+    const status = e.message === 'already_configured' ? 409 : 400;
+    res.status(status).json({ error: e.message });
+  }
 });
 
 // Cheap endpoint the login form hits to validate the password.

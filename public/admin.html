@@ -85,10 +85,21 @@
 </style>
 </head>
 <body class="admin-body">
-  <div id="login" class="login-screen">
+  <div id="setup" class="login-screen" hidden>
+    <form id="setup-form" class="login-card">
+      <div class="brand-lg">Notes <span>Admin</span></div>
+      <p class="muted">Welcome. Create a password to protect your admin — you'll use it to write and manage posts. Do this now, before sharing your site.</p>
+      <input id="setup-password" type="password" placeholder="Create a password (min 6 characters)" autocomplete="new-password" />
+      <input id="setup-confirm" type="password" placeholder="Confirm password" autocomplete="new-password" />
+      <button type="submit" class="btn-primary">Create admin</button>
+      <div id="setup-error" class="login-error" hidden></div>
+    </form>
+  </div>
+
+  <div id="login" class="login-screen" hidden>
     <form id="login-form" class="login-card">
       <div class="brand-lg">Notes <span>Admin</span></div>
-      <p class="muted">Enter the admin password to manage posts.</p>
+      <p class="muted">Enter your admin password to manage posts.</p>
       <input id="password" type="password" placeholder="Admin password" autocomplete="current-password" />
       <button type="submit" class="btn-primary">Sign in</button>
       <div id="login-error" class="login-error" hidden></div>

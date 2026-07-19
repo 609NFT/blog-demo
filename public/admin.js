@@ -30,6 +30,33 @@
     t._t = setTimeout(() => { t.classList.remove('show'); setTimeout(() => { t.hidden = true; }, 250); }, 1900);
   }
 
+  function showScreen(which) {
+    $('setup').hidden = which !== 'setup';
+    $('login').hidden = which !== 'login';
+    $('app').hidden = which !== 'app';
+  }
+
+  // ---- First-run setup ----
+  $('setup-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pw = $('setup-password').value;
+    const confirm = $('setup-confirm').value;
+    const err = $('setup-error');
+    err.hidden = true;
+    if (pw.length < 6) { err.textContent = 'Password must be at least 6 characters.'; err.hidden = false; return; }
+    if (pw !== confirm) { err.textContent = 'Passwords do not match.'; err.hidden = false; return; }
+    try {
+      const res = await fetch('/api/admin/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        if (d.error === 'already_configured') { err.textContent = 'Already set up — please sign in.'; err.hidden = false; showScreen('login'); return; }
+        err.textContent = 'Could not set the password.'; err.hidden = false; return;
+      }
+      password = pw; sessionStorage.setItem(KEY, password);
+      enterApp();
+    } catch (_) { err.textContent = 'Could not reach the server.'; err.hidden = false; }
+  });
+
   // ---- Auth ----
   $('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -47,12 +74,13 @@
 
   function signout() {
     sessionStorage.removeItem(KEY); password = '';
-    $('app').hidden = true; $('login').hidden = false; $('password').value = '';
+    $('password').value = '';
+    showScreen('login');
   }
   $('signout').onclick = signout;
 
   async function enterApp() {
-    $('login').hidden = true; $('app').hidden = false;
+    showScreen('app');
     await loadPosts();
   }
 
@@ -147,10 +175,18 @@
     } catch (err) { toast(err.message); }
   };
 
-  // Resume a session if the password is already stored.
-  if (password) {
-    fetch('/api/admin/verify', { headers: { Authorization: authHeader() } })
-      .then((r) => { if (r.ok) enterApp(); else signout(); })
-      .catch(() => {});
-  }
+  // Boot: resume a stored session, else decide between first-run setup and login.
+  (async () => {
+    if (password) {
+      try {
+        const r = await fetch('/api/admin/verify', { headers: { Authorization: authHeader() } });
+        if (r.ok) { enterApp(); return; }
+      } catch (_) { /* fall through to status check */ }
+      sessionStorage.removeItem(KEY); password = '';
+    }
+    try {
+      const { configured } = await (await fetch('/api/admin/status')).json();
+      showScreen(configured ? 'login' : 'setup');
+    } catch (_) { showScreen('login'); }
+  })();
 })();
