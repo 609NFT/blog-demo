@@ -162,7 +162,7 @@ router.get('/post/:slug', (req, res) => {
 <button class="to-top" id="to-top" aria-label="Back to top" title="Back to top">↑</button>
 
 <footer>
-  <span>Notes. A blog scaffold to fork and make your own. · <a href="/feed.xml">RSS</a></span>
+  <span>Notes. A blog scaffold to fork and make your own. · <a href="/feed.xml">RSS</a> · <a href="/admin">Admin</a></span>
 </footer>
 
 <script>
